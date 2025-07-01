@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.lottie)
+    implementation(libs.lottie.compose)
     implementation(libs.androidx.media3.transformer)
     implementation(libs.androidx.media3.common.ktx)
 

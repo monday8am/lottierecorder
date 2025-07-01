@@ -1,15 +1,15 @@
 [versions]
-agp = "8.11.0-rc01"
-kotlin = "2.1.21"
+agp = "8.11.0"
+kotlin = "2.2.0"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
-composeBom = "2025.06.00"
+composeBom = "2025.06.01"
 coil = "2.7.0"
-lottie = "6.6.6"
+lottie = "6.6.7"
 media3 = "1.7.1"
 
 [libraries]
@@ -33,9 +33,9 @@ androidx-media3-transformer = { group = "androidx.media3", name = "media3-transf
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
