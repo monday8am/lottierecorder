@@ -1,20 +1,17 @@
 package com.monday8am.lottierecorder
 
 import android.os.Bundle
-import android.webkit.URLUtil.isValidUrl
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,33 +43,29 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(modifier: Modifier = Modifier) {
-    var urlValue by remember { mutableStateOf("") }
-    val isValidUrl = urlValue.startsWith("http")
+    var lottieAnimation by remember { mutableStateOf(LottieAnimationId.BIRDS) }
 
-    Column(modifier = modifier.padding(16.dp)) {
-        TextField(
-            value = urlValue,
-            onValueChange = { urlValue = it },
-            label = { Text("Enter Lottie file URL:") },
-            modifier = Modifier
+    Box(
+        modifier = modifier.padding(16.dp)
+    ) {
+        LottiePlayerCommon(lottieAnimation.value)
+        LottieSelector(
+            selectedOption = lottieAnimation,
+            options = LottieAnimationId.entries,
+            onSelectOption = { selectedOption -> lottieAnimation = selectedOption },
         )
-
-        if (isValidUrl) {
-            LottiePlayer(urlValue)
-        } else {
-            Text("Please enter a valid URL", modifier = Modifier.padding(top = 8.dp))
-        }
     }
 }
 
 @Composable
-private fun LottiePlayer(
-    url: String,
-    modifier: Modifier = Modifier,
+private fun LottiePlayerCommon(
+    resourceId: Int,
+    modifier: Modifier = Modifier
 ) {
     val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.Url(url)
+        spec = LottieCompositionSpec.RawRes(resourceId)
     )
+
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever
