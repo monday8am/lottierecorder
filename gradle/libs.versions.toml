@@ -34,6 +34,7 @@ coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version = "2.5.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
