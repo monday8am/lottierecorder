@@ -7,13 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,7 +42,8 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.monday8am.lottierecorder.ui.theme.LottieRecorderTheme
-import sh.calvin.reorderable.ReorderableRow
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 enum class LottieAnimationId(val value: Int) {
     BIRDS(R.raw.birds_lottie),
@@ -123,6 +123,13 @@ internal fun LottieSceneEditor(
     modifier: Modifier = Modifier,
 ) {
     var reorderedList by remember { mutableStateOf(items) }
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        reorderedList = reorderedList.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+            onItemsReordered(reorderedList)
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -138,26 +145,28 @@ internal fun LottieSceneEditor(
 
         Text("Sort items using drag & drop:")
 
-        ReorderableRow(
-            list = reorderedList,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            onSettle = { fromIndex, toIndex ->
-                reorderedList = reorderedList.toMutableList().apply {
-                    add(toIndex, removeAt(fromIndex))
-                    onItemsReordered(reorderedList)
-                }
-            },
+        LazyRow(
+            state = lazyListState,
             modifier = Modifier
                 .fillMaxWidth()
                 .onSizeChanged({ size ->
                     rowWidth = size.width
                 }),
-        ) { index, item, isDragging ->
-            LottieThumbnail(
-                item.value,
-                modifier = Modifier
-                    .width(iconWidth)
-                    .draggableHandle()
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(
+                count = reorderedList.size,
+                key = { reorderedList[it].name },
+                itemContent = { index ->
+                    ReorderableItem(reorderableLazyListState, key = reorderedList[index].name) { isDragging ->
+                        LottieThumbnail(
+                            reorderedList[index].value,
+                            modifier = Modifier
+                                .width(width = iconWidth)
+                                .draggableHandle()
+                        )
+                    }
+                }
             )
         }
 
