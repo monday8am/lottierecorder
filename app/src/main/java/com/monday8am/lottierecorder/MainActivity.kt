@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,10 +29,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monday8am.lottierecorder.ui.theme.LottieRecorderTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -50,7 +53,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Content(modifier: Modifier = Modifier) {
+fun Content(
+    modifier: Modifier = Modifier
+) {
     var orderedItems by remember { mutableStateOf(LottieAnimationId.entries.toList()) }
 
     Column(
@@ -70,6 +75,8 @@ private fun LottieSceneRecorder(
     items: List<LottieAnimationId>,
     modifier: Modifier = Modifier
 ) {
+    val myViewModel: MainViewModel = viewModel()
+
     Box(
         modifier = modifier
             .fillMaxWidth()

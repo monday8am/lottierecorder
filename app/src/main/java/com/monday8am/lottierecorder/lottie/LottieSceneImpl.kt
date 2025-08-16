@@ -3,17 +3,16 @@ package com.monday8am.lottierecorder.lottie
 import android.util.Size
 import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.LottieDrawable
-import com.monday8am.lottierecorder.model.Scene
 
 internal class LottieSceneImpl(
-    private val scene: Scene,
+    private val lottieResourceId: Int,
 ) : LottieScene {
 
     private val durationInFrames: Int = 0
     private val lottieDrawable: LottieDrawable = LottieDrawable()
 
     override val name: String
-        get() = scene.javaClass.simpleName
+        get() = lottieResourceId.toString()
 
     override val totalFrames: Int
         get() = lottieDrawable.composition.durationFrames.toInt()
@@ -32,9 +31,6 @@ internal class LottieSceneImpl(
 
     override val hasEnded: Boolean
         get() = currentFrame > durationInFrames
-
-    override var hasLoadedBitmaps: Boolean = false
-        private set
 
     override lateinit var composition: LottieComposition
         private set

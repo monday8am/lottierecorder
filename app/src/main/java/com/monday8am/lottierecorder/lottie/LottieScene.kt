@@ -12,7 +12,6 @@ interface LottieScene {
     val frameRate: Int
     val size: Size
     val hasEnded: Boolean
-    val hasLoadedBitmaps: Boolean
     val composition: LottieComposition
     fun generateFrame(frameIndex: Int): LottieDrawable
 }

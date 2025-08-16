@@ -6,7 +6,6 @@ import android.os.HandlerThread
 import androidx.media3.common.util.UnstableApi
 import com.monday8am.lottierecorder.lottie.LottieFrameFactory
 import com.monday8am.lottierecorder.lottie.LottieScene
-import com.monday8am.lottierecorder.model.Scene
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +39,6 @@ internal class RenderVideoUseCase(
             val handler = Handler(handlerThread.looper)
 
             // Create a simple scene for demo purposes
-            val scenes = listOf<Scene>(Scene.End)
             val lottieScenes = listOf<LottieScene>()
             
             // Use a placeholder audio file
