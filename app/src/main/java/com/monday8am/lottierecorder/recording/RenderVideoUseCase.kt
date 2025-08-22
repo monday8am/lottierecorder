@@ -6,7 +6,6 @@ import android.os.HandlerThread
 import androidx.media3.common.util.UnstableApi
 import com.monday8am.lottierecorder.lottie.LottieFrameFactory
 import com.monday8am.lottierecorder.lottie.LottieScene
-import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -15,6 +14,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 
+sealed class RecordingResult {
+    data class Success(val uri: String, val fileSize: Long) : RecordingResult()
+    data object Idle : RecordingResult()
+    data class Rendering(val progress: Float) : RecordingResult()
+    data class Error(val error: String) : RecordingResult()
+}
+
 /**
  * A simplified version of RenderVideoUseCase that returns the progress flow of rendering video operation
  */
@@ -22,39 +28,31 @@ internal class RenderVideoUseCase(
     private val context: Context,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    internal sealed class Result {
-        data class Success(val uri: String, val fileSize: Long) : Result()
-        data object Loading : Result()
-        data class Rendering(val progress: Float) : Result()
-        data class Error(val error: String) : Result()
-    }
 
     @UnstableApi
-    fun execute(outputPath: String): Flow<Result> {
+    fun execute(
+        lottieScenes: List<LottieScene>,
+        audioUri: String,
+        outputPath: String,
+    ): Flow<RecordingResult> {
         return callbackFlow {
-            trySend(Result.Loading)
+            trySend(RecordingResult.Idle)
 
             // Create a HandlerThread if the calling thread has no looper
             val handlerThread = HandlerThread("RecordingThread").apply { start() }
             val handler = Handler(handlerThread.looper)
 
-            // Create a simple scene for demo purposes
-            val lottieScenes = listOf<LottieScene>()
-            
-            // Use a placeholder audio file
-            val audioFile = File(context.cacheDir, "placeholder.aac")
-
             recordLottieToVideo(
                 context = context,
                 lottieFrameFactory = LottieFrameFactory(lottieScenes),
-                audioUri = audioFile.path,
+                audioUri = audioUri,
                 outputFilePath = outputPath,
                 videoWidth = VIDEO_WIDTH_PX,
                 videoHeight = VIDEO_HEIGHT_PX,
                 handler = handler,
-                onProgress = { trySend(Result.Rendering(it)) },
-                onSuccess = { size -> trySend(Result.Success(outputPath, size)) },
-                onError = { trySend(Result.Error(it.message ?: "")) },
+                onProgress = { trySend(RecordingResult.Rendering(it)) },
+                onSuccess = { size -> trySend(RecordingResult.Success(outputPath, size)) },
+                onError = { trySend(RecordingResult.Error(it.message ?: "")) },
                 onRelease = {
                     handlerThread.quitSafely()
                     close()
@@ -67,7 +65,7 @@ internal class RenderVideoUseCase(
             }
         }
             .catch {
-                emit(Result.Error(it.message ?: "Recording failed!"))
+                emit(RecordingResult.Error(it.message ?: "Recording failed!"))
             }
             .flowOn(defaultDispatcher)
     }

@@ -35,7 +35,7 @@ internal class AudioDecoder(uri: String, private val callback: AudioCallback) {
 
     init {
         try {
-            extractor.setDataSource(uri.toString())
+            extractor.setDataSource(uri)
 
             var format: MediaFormat? = null
             var mime: String? = null

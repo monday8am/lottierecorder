@@ -55,7 +55,7 @@ internal suspend fun recordLottieToVideo(
     val frameRate = lottieFrameFactory.frameRate
     val durationUs = (lottieFrameFactory.totalFrames.toFloat() / frameRate.toFloat() * 1000L * 1000L).toLong()
 
-    var assetLoaderDeferred = CompletableDeferred<RawAssetLoader>()
+    val assetLoaderDeferred = CompletableDeferred<RawAssetLoader>()
     var awaitReadyForInput: CompletableDeferred<Unit>? = null
     var awaitForLastImage: CompletableDeferred<Image>? = null
     var awaitForAudioChunk: CompletableDeferred<Pair<ByteBuffer, Long>>? = null
@@ -118,6 +118,14 @@ internal suspend fun recordLottieToVideo(
 
     val rawAssetLoader = assetLoaderDeferred.await()
 
+    // Queues data to the asset loader, retrying until successful.
+    fun safeQueue(action: () -> Boolean) {
+        var result = false
+        while (!result) {
+            result = action()
+        }
+    }
+
     // Launch coroutine to render lottie frames
     launch {
         // Use an ImageReader to render bitmaps onto an input Surface
@@ -128,8 +136,8 @@ internal suspend fun recordLottieToVideo(
         imageReader.setOnImageAvailableListener(imageReaderListener, handler)
 
         repeat(lottieFrameFactory.totalFrames) { frameIndex ->
-            awaitReadyForInput = CompletableDeferred<Unit>()
-            awaitForLastImage = CompletableDeferred<Image>()
+            awaitReadyForInput = CompletableDeferred()
+            awaitForLastImage = CompletableDeferred()
 
             lottieFrameFactory.generateFrame(frameIndex).let { lottieFrame ->
                 val presentationTime = frameIndex * C.MICROS_PER_SECOND / frameRate
@@ -137,6 +145,7 @@ internal suspend fun recordLottieToVideo(
                 // Draw lottie on imageReader surface using hardware canvas
                 val hCanvas = imageReader.surface.lockHardwareCanvas()
                 try {
+                    lottieFrame.renderMode
                     lottieFrame.setBounds(0, 0, videoWidth, videoHeight)
                     lottieFrame.draw(hCanvas)
                 } finally {
@@ -147,10 +156,7 @@ internal suspend fun recordLottieToVideo(
                 val image = awaitForLastImage.await()
                 val textureId = uploadImageToGLTexture(image)
 
-                var result = false
-                while (result.not()) {
-                    result = rawAssetLoader.queueInputTexture(textureId, presentationTime)
-                }
+                safeQueue { rawAssetLoader.queueInputTexture(textureId, presentationTime) }
             }
             onProgress(frameIndex.toFloat() / lottieFrameFactory.totalFrames)
             awaitReadyForInput.await()
@@ -191,10 +197,7 @@ internal suspend fun recordLottieToVideo(
             lastPresentationTime = presentationTimeUs
             val isLast = lastPresentationTime >= durationUs
             endOfStream = isLast
-            var result = false
-            while (result.not()) {
-                result = rawAssetLoader.queueAudioData(audioChunk, presentationTimeUs, isLast)
-            }
+            safeQueue { rawAssetLoader.queueAudioData(audioChunk, presentationTimeUs, isLast) }
         }
 
         audioDecoder.release()

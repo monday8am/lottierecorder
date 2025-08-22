@@ -1,5 +1,6 @@
 package com.monday8am.lottierecorder.lottie
 
+import android.util.Log
 import androidx.annotation.RestrictTo
 import com.airbnb.lottie.LottieDrawable
 import org.jetbrains.annotations.VisibleForTesting

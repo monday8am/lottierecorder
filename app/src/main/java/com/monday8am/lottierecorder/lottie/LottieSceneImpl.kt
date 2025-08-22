@@ -1,10 +1,13 @@
 package com.monday8am.lottierecorder.lottie
 
+import android.content.Context
 import android.util.Size
 import com.airbnb.lottie.LottieComposition
+import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
 
 internal class LottieSceneImpl(
+    context: Context,
     private val lottieResourceId: Int,
 ) : LottieScene {
 
@@ -32,11 +35,15 @@ internal class LottieSceneImpl(
     override val hasEnded: Boolean
         get() = currentFrame > durationInFrames
 
-    override lateinit var composition: LottieComposition
+    override var composition: LottieComposition
         private set
 
     init {
-        // load lottie here?
+        val result = LottieCompositionFactory.fromRawRes(context, lottieResourceId).result
+        result?.value?.let {
+            composition = it
+            lottieDrawable.composition = it
+        } ?: throw Exception("Error creating LottieScene")
     }
 
     override fun generateFrame(frameIndex: Int): LottieDrawable {
