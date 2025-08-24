@@ -31,6 +31,10 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.monday8am.lottierecorder.recording.RecordingResult
+import com.monday8am.lottierecorder.ui.LottieAnimationId
+import com.monday8am.lottierecorder.ui.LottieSceneEditor
+import com.monday8am.lottierecorder.ui.MainViewModel
+import com.monday8am.lottierecorder.ui.Media3Player
 import com.monday8am.lottierecorder.ui.theme.LottieRecorderTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,11 +83,18 @@ fun Content(
     ) {
         LottieSceneEditor(
             items = LottieAnimationId.entries,
-            onItemsReordered = { orderedItems = it},
+            onItemsReordered = { orderedItems = it },
         )
 
         when(state) {
-            is RecordingResult.Success -> Text("Success: ${state.uri}")
+            is RecordingResult.Success -> {
+                Text("Success: ${state.uri}")
+                Media3Player(
+                    uri = state.uri,
+                    onDestroy = { },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             is RecordingResult.Error -> Text("Error: ${state.error}")
             is RecordingResult.Rendering -> Text("Rendering... ${state.progress}")
             is RecordingResult.Idle -> {

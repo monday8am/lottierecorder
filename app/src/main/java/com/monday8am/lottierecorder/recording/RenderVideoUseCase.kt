@@ -32,7 +32,7 @@ internal class RenderVideoUseCase(
     @UnstableApi
     fun execute(
         lottieScenes: List<LottieScene>,
-        audioUri: String,
+        audioInput: AudioInput,
         outputPath: String,
     ): Flow<RecordingResult> {
         return callbackFlow {
@@ -45,7 +45,7 @@ internal class RenderVideoUseCase(
             recordLottieToVideo(
                 context = context,
                 lottieFrameFactory = LottieFrameFactory(lottieScenes),
-                audioUri = audioUri,
+                audioInput = audioInput,
                 outputFilePath = outputPath,
                 videoWidth = VIDEO_WIDTH_PX,
                 videoHeight = VIDEO_HEIGHT_PX,

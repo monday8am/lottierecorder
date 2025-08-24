@@ -1,7 +1,9 @@
 package com.monday8am.lottierecorder.recording
 
 import android.content.Context
+import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.media.Image
 import android.media.ImageReader
 import android.net.Uri
@@ -41,7 +43,7 @@ import kotlinx.coroutines.withContext
 internal suspend fun recordLottieToVideo(
     context: Context,
     lottieFrameFactory: LottieFrameFactory,
-    audioUri: String,
+    audioInput: AudioInput,
     outputFilePath: String,
     videoWidth: Int,
     videoHeight: Int,
@@ -54,6 +56,11 @@ internal suspend fun recordLottieToVideo(
     DebugTraceUtil.enableTracing = true
     val frameRate = lottieFrameFactory.frameRate
     val durationUs = (lottieFrameFactory.totalFrames.toFloat() / frameRate.toFloat() * 1000L * 1000L).toLong()
+    val rectVideoSize = Rect(0, 0, videoWidth, videoHeight)
+    val paint = Paint().apply {
+        isAntiAlias = true
+        color = android.graphics.Color.BLACK
+    }
 
     val assetLoaderDeferred = CompletableDeferred<RawAssetLoader>()
     var awaitReadyForInput: CompletableDeferred<Unit>? = null
@@ -129,7 +136,7 @@ internal suspend fun recordLottieToVideo(
     // Launch coroutine to render lottie frames
     launch {
         // Use an ImageReader to render bitmaps onto an input Surface
-        val imageReader = ImageReader.newInstance(videoWidth, videoHeight, PixelFormat.RGBA_8888, 10)
+        val imageReader = ImageReader.newInstance(videoWidth, videoHeight, PixelFormat.RGBA_8888, 3)
         val imageReaderListener = ImageReader.OnImageAvailableListener { imageReader ->
             awaitForLastImage?.complete(imageReader.acquireLatestImage())
         }
@@ -146,7 +153,8 @@ internal suspend fun recordLottieToVideo(
                 val hCanvas = imageReader.surface.lockHardwareCanvas()
                 try {
                     lottieFrame.renderMode
-                    lottieFrame.setBounds(0, 0, videoWidth, videoHeight)
+                    lottieFrame.bounds = rectVideoSize
+                    hCanvas.drawRect(rectVideoSize, paint)
                     lottieFrame.draw(hCanvas)
                 } finally {
                     imageReader.surface.unlockCanvasAndPost(hCanvas)
@@ -169,7 +177,8 @@ internal suspend fun recordLottieToVideo(
         var lastPresentationTime: Long
         var endOfStream = false
         val audioDecoder = AudioDecoder(
-            audioUri,
+            context = context,
+            audioInput = audioInput,
             callback = object : AudioDecoder.AudioCallback {
                 override fun onAudioDecoded(buffer: ByteBuffer, size: Int, presentationTimeUs: Long) {
                     awaitForAudioChunk?.complete(Pair(buffer, presentationTimeUs))
@@ -192,7 +201,7 @@ internal suspend fun recordLottieToVideo(
         while (endOfStream.not()) {
             awaitForAudioChunk = CompletableDeferred()
             audioDecoder.decodeNextChunk()
-            val (audioChunk, presentationTimeUs) = awaitForAudioChunk!!.await()
+            val (audioChunk, presentationTimeUs) = awaitForAudioChunk.await()
 
             lastPresentationTime = presentationTimeUs
             val isLast = lastPresentationTime >= durationUs

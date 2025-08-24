@@ -1,17 +1,28 @@
 package com.monday8am.lottierecorder.recording
 
+import android.content.Context
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import androidx.annotation.RawRes
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.LinkedList
 import java.util.Queue
 
+sealed class AudioInput {
+    data class RawResource(@param:RawRes val resourceId: Int) : AudioInput()
+    data class FileUri(val uri: String) : AudioInput()
+}
+
 /**
  * Decodes audio from a given URI and provides decoded audio chunks to a callback.
  */
-internal class AudioDecoder(uri: String, private val callback: AudioCallback) {
+internal class AudioDecoder(
+    context: Context,
+    audioInput: AudioInput,
+    private val callback: AudioCallback
+) {
     companion object {
         private const val PRELOAD_SIZE = 5 // Number of chunks to pre-decode
     }
@@ -35,7 +46,10 @@ internal class AudioDecoder(uri: String, private val callback: AudioCallback) {
 
     init {
         try {
-            extractor.setDataSource(uri)
+            when (audioInput) {
+                is AudioInput.RawResource -> extractor.setDataSourceFromRaw(context = context, resId = audioInput.resourceId)
+                is AudioInput.FileUri -> extractor.setDataSource(audioInput.uri)
+            }
 
             var format: MediaFormat? = null
             var mime: String? = null
@@ -129,5 +143,14 @@ internal class AudioDecoder(uri: String, private val callback: AudioCallback) {
         decoder.release()
         extractor.release()
         bufferQueue.clear()
+    }
+}
+
+private fun MediaExtractor.setDataSourceFromRaw(context: Context, @RawRes resId: Int) {
+    val afd = context.resources.openRawResourceFd(resId)
+        ?: throw IllegalStateException("Resource is compressed or missing")
+    afd.use {
+        setDataSource(it.fileDescriptor, it.startOffset, it.length)
+        it.close()
     }
 }
