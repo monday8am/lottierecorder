@@ -51,8 +51,8 @@ internal fun LottieSceneEditor(
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         reorderedList = reorderedList.toMutableList().apply {
             add(to.index, removeAt(from.index))
-            onItemsReordered(reorderedList)
         }
+        onItemsReordered(reorderedList)
     }
 
     Column(
@@ -68,9 +68,9 @@ internal fun LottieSceneEditor(
         }
 
         Text(
-            text = "#1 Sort items using drag & drop",
+            text = "Sort items using drag & drop",
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -78,9 +78,7 @@ internal fun LottieSceneEditor(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxWidth()
-                .onSizeChanged({ size ->
-                    rowWidth = size.width
-                }),
+                .onSizeChanged { size -> rowWidth = size.width },
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(

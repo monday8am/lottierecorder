@@ -25,11 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.monday8am.lottierecorder.recording.RecordingResult
 import com.monday8am.lottierecorder.ui.LottieAnimationId
 import com.monday8am.lottierecorder.ui.LottieSceneEditor
@@ -54,13 +49,7 @@ class MainActivity : ComponentActivity() {
 
                     Content(
                         state = state,
-                        onPressRender = {
-                            try {
-                                viewModel.recordLottie(lottieIds = it)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        },
+                        onPressRender = { viewModel.recordLottie(lottieIds = it) },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -83,11 +72,14 @@ fun Content(
     ) {
         LottieSceneEditor(
             items = LottieAnimationId.entries,
-            onItemsReordered = { orderedItems = it },
+            onItemsReordered = {
+                orderedItems = it
+            },
         )
 
         when(state) {
             is RecordingResult.Success -> {
+                RendererButton(onPressRender = { onPressRender(orderedItems) })
                 Text("Success: ${state.uri}")
                 Media3Player(
                     uri = state.uri,
@@ -97,39 +89,25 @@ fun Content(
             }
             is RecordingResult.Error -> Text("Error: ${state.error}")
             is RecordingResult.Rendering -> Text("Rendering... ${state.progress}")
-            is RecordingResult.Idle -> {
-                Button(
-                    onClick = { onPressRender(orderedItems) },
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
-                ) {
-                    Text("Render video!")
-                }
-            }
+            is RecordingResult.Idle -> RendererButton(onPressRender = { onPressRender(orderedItems) })
         }
     }
 }
 
 @Composable
-private fun LottiePlayer(
-    resourceId: Int,
+private fun RendererButton(
+    onPressRender: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(resourceId)
-    )
-
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-    LottieAnimation(
-        composition = composition,
-        progress = { progress },
-        modifier = modifier.fillMaxSize()
-    )
+    Button(
+        onClick = onPressRender,
+        modifier = modifier
+            .height(40.dp)
+            .fillMaxWidth(),
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
+    ) {
+        Text("Render video!")
+    }
 }
 
 @Preview(showBackground = true)
