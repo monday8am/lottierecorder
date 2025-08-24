@@ -34,15 +34,13 @@ import com.monday8am.lottierecorder.ui.theme.LottieRecorderTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             LottieRecorderTheme {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) { innerPadding ->
                     val viewModel: MainViewModel = viewModel()
                     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,7 +48,7 @@ class MainActivity : ComponentActivity() {
                     Content(
                         state = state,
                         onPressRender = { viewModel.recordLottie(lottieIds = it) },
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
@@ -62,13 +60,13 @@ class MainActivity : ComponentActivity() {
 fun Content(
     state: RecordingResult,
     onPressRender: (List<LottieAnimationId>) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var orderedItems by remember { mutableStateOf(LottieAnimationId.entries.toList()) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier.padding(16.dp)
+        modifier = modifier.padding(16.dp),
     ) {
         LottieSceneEditor(
             items = LottieAnimationId.entries,
@@ -77,7 +75,7 @@ fun Content(
             },
         )
 
-        when(state) {
+        when (state) {
             is RecordingResult.Success -> {
                 RendererButton(onPressRender = { onPressRender(orderedItems) })
                 Text("Success: ${state.uri}")
@@ -97,13 +95,14 @@ fun Content(
 @Composable
 private fun RendererButton(
     onPressRender: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onPressRender,
-        modifier = modifier
-            .height(40.dp)
-            .fillMaxWidth(),
+        modifier =
+            modifier
+                .height(40.dp)
+                .fillMaxWidth(),
         contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
     ) {
         Text("Render video!")

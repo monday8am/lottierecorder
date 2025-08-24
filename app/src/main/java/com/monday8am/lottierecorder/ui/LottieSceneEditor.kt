@@ -34,7 +34,9 @@ import com.monday8am.lottierecorder.ui.theme.LottieRecorderTheme
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
-enum class LottieAnimationId(val value: Int) {
+enum class LottieAnimationId(
+    val value: Int,
+) {
     BIRDS(R.raw.birds_lottie),
     CYCLING(R.raw.cycling_lottie),
     VAN(R.raw.van_lottie),
@@ -48,22 +50,24 @@ internal fun LottieSceneEditor(
 ) {
     var reorderedList by remember { mutableStateOf(items) }
     val lazyListState = rememberLazyListState()
-    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        reorderedList = reorderedList.toMutableList().apply {
-            add(to.index, removeAt(from.index))
+    val reorderableLazyListState =
+        rememberReorderableLazyListState(lazyListState) { from, to ->
+            reorderedList =
+                reorderedList.toMutableList().apply {
+                    add(to.index, removeAt(from.index))
+                }
+            onItemsReordered(reorderedList)
         }
-        onItemsReordered(reorderedList)
-    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         val localDensity = LocalDensity.current
         var rowWidth by remember { mutableIntStateOf(300) }
         val iconWidth by remember {
             derivedStateOf {
-                with(localDensity) { rowWidth.toDp() / 3  }
+                with(localDensity) { rowWidth.toDp() / 3 }
             }
         }
 
@@ -71,14 +75,15 @@ internal fun LottieSceneEditor(
             text = "Sort items using drag & drop",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         LazyRow(
             state = lazyListState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { size -> rowWidth = size.width },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { size -> rowWidth = size.width },
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(
@@ -88,12 +93,13 @@ internal fun LottieSceneEditor(
                     ReorderableItem(reorderableLazyListState, key = reorderedList[index].name) { isDragging ->
                         LottieThumbnail(
                             reorderedList[index].value,
-                            modifier = Modifier
-                                .width(width = iconWidth)
-                                .draggableHandle()
+                            modifier =
+                                Modifier
+                                    .width(width = iconWidth)
+                                    .draggableHandle(),
                         )
                     }
-                }
+                },
             )
         }
     }
@@ -105,18 +111,18 @@ private fun LottieThumbnail(
     modifier: Modifier = Modifier,
 ) {
     val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(resId)
+        spec = LottieCompositionSpec.RawRes(resId),
     )
     val progress by animateLottieCompositionAsState(
         composition = composition,
-        iterations = LottieConstants.IterateForever
+        iterations = LottieConstants.IterateForever,
     )
 
     Box(modifier = modifier.aspectRatio(1f)) {
         LottieAnimation(
             composition,
             progress = { progress },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
@@ -131,4 +137,3 @@ private fun LottieSceneEditorPreview() {
         )
     }
 }
-

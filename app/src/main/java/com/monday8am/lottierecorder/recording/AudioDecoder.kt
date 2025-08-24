@@ -11,8 +11,13 @@ import java.util.LinkedList
 import java.util.Queue
 
 sealed class AudioInput {
-    data class RawResource(@param:RawRes val resourceId: Int) : AudioInput()
-    data class FileUri(val uri: String) : AudioInput()
+    data class RawResource(
+        @param:RawRes val resourceId: Int,
+    ) : AudioInput()
+
+    data class FileUri(
+        val uri: String,
+    ) : AudioInput()
 }
 
 /**
@@ -21,15 +26,21 @@ sealed class AudioInput {
 internal class AudioDecoder(
     context: Context,
     audioInput: AudioInput,
-    private val callback: AudioCallback
+    private val callback: AudioCallback,
 ) {
     companion object {
         private const val PRELOAD_SIZE = 5 // Number of chunks to pre-decode
     }
 
     interface AudioCallback {
-        fun onAudioDecoded(buffer: ByteBuffer, size: Int, presentationTimeUs: Long)
+        fun onAudioDecoded(
+            buffer: ByteBuffer,
+            size: Int,
+            presentationTimeUs: Long,
+        )
+
         fun onEndOfStream()
+
         fun onError(e: Exception)
     }
 
@@ -123,10 +134,11 @@ internal class AudioDecoder(
             if (outputIndex >= 0) {
                 val outputBuffer = decoder.getOutputBuffer(outputIndex)
                 if (bufferInfo.size > 0 && outputBuffer != null) {
-                    val copiedBuffer = ByteBuffer.allocate(bufferInfo.size).apply {
-                        put(outputBuffer)
-                        flip()
-                    }
+                    val copiedBuffer =
+                        ByteBuffer.allocate(bufferInfo.size).apply {
+                            put(outputBuffer)
+                            flip()
+                        }
                     bufferQueue.add(AudioChunk(copiedBuffer, bufferInfo.size, bufferInfo.presentationTimeUs))
                 }
                 decoder.releaseOutputBuffer(outputIndex, false)
@@ -146,9 +158,13 @@ internal class AudioDecoder(
     }
 }
 
-private fun MediaExtractor.setDataSourceFromRaw(context: Context, @RawRes resId: Int) {
-    val afd = context.resources.openRawResourceFd(resId)
-        ?: throw IllegalStateException("Resource is compressed or missing")
+private fun MediaExtractor.setDataSourceFromRaw(
+    context: Context,
+    @RawRes resId: Int,
+) {
+    val afd =
+        context.resources.openRawResourceFd(resId)
+            ?: throw IllegalStateException("Resource is compressed or missing")
     afd.use {
         setDataSource(it.fileDescriptor, it.startOffset, it.length)
         it.close()

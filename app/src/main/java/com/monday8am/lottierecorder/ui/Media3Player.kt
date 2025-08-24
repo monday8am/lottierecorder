@@ -4,8 +4,6 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -13,10 +11,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -26,7 +22,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
-
 @Composable
 internal fun Media3Player(
     uri: String,
@@ -35,17 +30,19 @@ internal fun Media3Player(
 ) {
     var currentPosition by rememberSaveable { mutableLongStateOf(0L) }
     val player = generatePlayer(uri)
-    val playerView = rememberPlayerViewWithLifecycle { position, duration ->
-        currentPosition = position
+    val playerView =
+        rememberPlayerViewWithLifecycle { position, duration ->
+            currentPosition = position
 
-        val progress = (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-        onDestroy(progress)
-    }
+            val progress = (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+            onDestroy(progress)
+        }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(ratio = 1.777f),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .aspectRatio(ratio = 1.777f),
     ) {
         PlayerContainer(
             playerView = playerView,
@@ -74,38 +71,38 @@ private fun PlayerContainer(
 
 @OptIn(UnstableApi::class)
 @Composable
-private fun rememberPlayerLifecycleObserver(playerView: PlayerView): LifecycleEventObserver = remember(playerView) {
-    LifecycleEventObserver { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                playerView.onResume()
-                playerView.player?.play()
-                playerView.hideController()
-            }
-            Lifecycle.Event.ON_PAUSE -> {
-                playerView.player?.pause()
-                playerView.onPause()
-            }
-            Lifecycle.Event.ON_DESTROY -> playerView.player?.release()
-            else -> {
-                // NOTHING TO DO HERE
+private fun rememberPlayerLifecycleObserver(playerView: PlayerView): LifecycleEventObserver =
+    remember(playerView) {
+        LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    playerView.onResume()
+                    playerView.player?.play()
+                    playerView.hideController()
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    playerView.player?.pause()
+                    playerView.onPause()
+                }
+                Lifecycle.Event.ON_DESTROY -> playerView.player?.release()
+                else -> {
+                    // NOTHING TO DO HERE
+                }
             }
         }
     }
-}
 
 @OptIn(UnstableApi::class)
 @Composable
-private fun rememberPlayerViewWithLifecycle(
-    onDispose: (Long, Long) -> Unit,
-): PlayerView {
+private fun rememberPlayerViewWithLifecycle(onDispose: (Long, Long) -> Unit): PlayerView {
     val context = LocalContext.current
-    val playerView = remember {
-        PlayerView(context).apply {
-            setShowNextButton(false)
-            setShowPreviousButton(false)
+    val playerView =
+        remember {
+            PlayerView(context).apply {
+                setShowNextButton(false)
+                setShowPreviousButton(false)
+            }
         }
-    }
 
     val lifecycleObserver = rememberPlayerLifecycleObserver(playerView)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -131,18 +128,4 @@ private fun generatePlayer(uri: String): ExoPlayer {
     player.prepare()
     player.play()
     return player
-}
-
-@Composable
-private fun LoadingIndicator(
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(ratio = 1.777f),
-    ) {
-        CircularProgressIndicator(modifier = Modifier.padding(48.dp))
-    }
 }

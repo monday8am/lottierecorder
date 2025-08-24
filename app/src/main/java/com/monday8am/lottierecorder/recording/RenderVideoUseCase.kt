@@ -15,10 +15,20 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 
 sealed class RecordingResult {
-    data class Success(val uri: String, val fileSize: Long) : RecordingResult()
+    data class Success(
+        val uri: String,
+        val fileSize: Long,
+    ) : RecordingResult()
+
     data object Idle : RecordingResult()
-    data class Rendering(val progress: Float) : RecordingResult()
-    data class Error(val error: String) : RecordingResult()
+
+    data class Rendering(
+        val progress: Float,
+    ) : RecordingResult()
+
+    data class Error(
+        val error: String,
+    ) : RecordingResult()
 }
 
 /**
@@ -28,14 +38,13 @@ internal class RenderVideoUseCase(
     private val context: Context,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-
     @UnstableApi
     fun execute(
         lottieScenes: List<LottieScene>,
         audioInput: AudioInput,
         outputPath: String,
-    ): Flow<RecordingResult> {
-        return callbackFlow {
+    ): Flow<RecordingResult> =
+        callbackFlow {
             trySend(RecordingResult.Idle)
 
             // Create a HandlerThread if the calling thread has no looper
@@ -63,12 +72,9 @@ internal class RenderVideoUseCase(
                 handlerThread.quitSafely()
                 close()
             }
-        }
-            .catch {
-                emit(RecordingResult.Error(it.message ?: "Recording failed!"))
-            }
-            .flowOn(defaultDispatcher)
-    }
+        }.catch {
+            emit(RecordingResult.Error(it.message ?: "Recording failed!"))
+        }.flowOn(defaultDispatcher)
 }
 
 internal const val VIDEO_WIDTH_PX = 1920

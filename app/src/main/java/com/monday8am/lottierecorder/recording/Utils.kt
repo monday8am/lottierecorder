@@ -17,7 +17,7 @@ internal fun calculateFitInsideBounds(
     contentWidth: Int,
     contentHeight: Int,
     canvasWidth: Int,
-    canvasHeight: Int
+    canvasHeight: Int,
 ): Rect {
     if (contentWidth == 0 || contentHeight == 0 || canvasWidth == 0 || canvasHeight == 0) {
         return Rect(0, 0, canvasWidth, canvasHeight) // Avoid division by zero, return full canvas

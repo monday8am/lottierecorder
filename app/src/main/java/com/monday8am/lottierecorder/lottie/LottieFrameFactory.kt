@@ -1,6 +1,5 @@
 package com.monday8am.lottierecorder.lottie
 
-import android.util.Log
 import androidx.annotation.RestrictTo
 import com.airbnb.lottie.LottieDrawable
 import org.jetbrains.annotations.VisibleForTesting
@@ -47,7 +46,5 @@ class LottieFrameFactory(
     }
 
     @VisibleForTesting
-    fun getLottieSceneIndexFor(frame: Int): Int {
-        return startEndFrames.indexOfFirst { frame >= it.first && frame <= it.second }
-    }
+    fun getLottieSceneIndexFor(frame: Int): Int = startEndFrames.indexOfFirst { frame >= it.first && frame <= it.second }
 }

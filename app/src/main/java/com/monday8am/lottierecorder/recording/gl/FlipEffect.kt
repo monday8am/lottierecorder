@@ -6,7 +6,6 @@ import androidx.media3.effect.GlMatrixTransformation
 
 @UnstableApi
 class FlipEffect : GlMatrixTransformation {
-
     override fun getGlMatrixArray(presentationTimeUs: Long): FloatArray {
         val matrix = FloatArray(16)
         Matrix.setIdentityM(matrix, 0)

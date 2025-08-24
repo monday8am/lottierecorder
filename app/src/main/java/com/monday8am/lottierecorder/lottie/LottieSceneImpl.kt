@@ -10,7 +10,6 @@ internal class LottieSceneImpl(
     context: Context,
     private val lottieResourceId: Int,
 ) : LottieScene {
-
     private val durationInFrames: Int = 0
     private val lottieDrawable: LottieDrawable = LottieDrawable()
 

@@ -22,35 +22,37 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
-
+class MainViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val videoPath = "${application.cacheDir}/output.mp4"
     private val renderVideoUseCase = RenderVideoUseCase(application.applicationContext)
     private val scenesFlow = MutableStateFlow(emptyList<LottieScene>())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @UnstableApi
-    val uiState: StateFlow<RecordingResult> = scenesFlow
-        .filter { it.isNotEmpty() }
-        .flatMapLatest { scenes ->
-            resetVideoFile()
-            renderVideoUseCase.execute(
-                lottieScenes = scenes,
-                audioInput = AudioInput.RawResource(resourceId = R.raw.sample_15s),
-                outputPath = videoPath
+    val uiState: StateFlow<RecordingResult> =
+        scenesFlow
+            .filter { it.isNotEmpty() }
+            .flatMapLatest { scenes ->
+                resetVideoFile()
+                renderVideoUseCase.execute(
+                    lottieScenes = scenes,
+                    audioInput = AudioInput.RawResource(resourceId = R.raw.sample_15s),
+                    outputPath = videoPath,
+                )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Companion.WhileSubscribed(300L),
+                initialValue = RecordingResult.Idle,
             )
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(300L),
-            initialValue = RecordingResult.Idle
-        )
 
     @androidx.annotation.OptIn(UnstableApi::class)
     fun recordLottie(lottieIds: List<LottieAnimationId>) {
-        val scenes = lottieIds.map {
-            LottieSceneImpl(context = application.applicationContext, lottieResourceId = it.value)
-        }
+        val scenes =
+            lottieIds.map {
+                LottieSceneImpl(context = application.applicationContext, lottieResourceId = it.value)
+            }
         scenesFlow.update { scenes }
     }
 

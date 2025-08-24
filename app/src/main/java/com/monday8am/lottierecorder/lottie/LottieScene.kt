@@ -13,5 +13,6 @@ interface LottieScene {
     val size: Size
     val hasEnded: Boolean
     val composition: LottieComposition
+
     fun generateFrame(frameIndex: Int): LottieDrawable
 }

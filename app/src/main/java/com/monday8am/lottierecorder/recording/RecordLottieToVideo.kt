@@ -32,12 +32,12 @@ import com.monday8am.lottierecorder.lottie.LottieFrameFactory
 import com.monday8am.lottierecorder.recording.gl.FlipEffect
 import com.monday8am.lottierecorder.recording.gl.createOpenGlObjects
 import com.monday8am.lottierecorder.recording.gl.uploadImageToGLTexture
-import java.nio.ByteBuffer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.nio.ByteBuffer
 
 @UnstableApi
 internal suspend fun recordLottieToVideo(
@@ -57,10 +57,11 @@ internal suspend fun recordLottieToVideo(
     val frameRate = lottieFrameFactory.frameRate
     val durationUs = (lottieFrameFactory.totalFrames.toFloat() / frameRate.toFloat() * 1000L * 1000L).toLong()
     val rectVideoSize = Rect(0, 0, videoWidth, videoHeight)
-    val paint = Paint().apply {
-        isAntiAlias = true
-        color = android.graphics.Color.BLACK
-    }
+    val paint =
+        Paint().apply {
+            isAntiAlias = true
+            color = android.graphics.Color.BLACK
+        }
 
     val assetLoaderDeferred = CompletableDeferred<RawAssetLoader>()
     var awaitReadyForInput: CompletableDeferred<Unit>? = null
@@ -69,58 +70,74 @@ internal suspend fun recordLottieToVideo(
 
     val transformerListener: Transformer.Listener =
         object : Transformer.Listener {
-            override fun onCompleted(composition: Composition, result: ExportResult) {
+            override fun onCompleted(
+                composition: Composition,
+                result: ExportResult,
+            ) {
                 onSuccess(result.fileSizeBytes)
                 onRelease()
             }
 
-            override fun onError(composition: Composition, result: ExportResult, exception: ExportException) {
+            override fun onError(
+                composition: Composition,
+                result: ExportResult,
+                exception: ExportException,
+            ) {
                 onError(exception)
                 onRelease()
             }
         }
 
-    val audioFormat = Format.Builder()
-        .setSampleMimeType(MimeTypes.AUDIO_RAW)
-        .setChannelCount(2)
-        .setSampleRate(44100)
-        .setPcmEncoding(C.ENCODING_PCM_16BIT)
-        .build()
+    val audioFormat =
+        Format
+            .Builder()
+            .setSampleMimeType(MimeTypes.AUDIO_RAW)
+            .setChannelCount(2)
+            .setSampleRate(44100)
+            .setPcmEncoding(C.ENCODING_PCM_16BIT)
+            .build()
 
-    val videoFormat = Format.Builder()
-        .setWidth(videoWidth)
-        .setHeight(videoHeight)
-        .build()
+    val videoFormat =
+        Format
+            .Builder()
+            .setWidth(videoWidth)
+            .setHeight(videoHeight)
+            .build()
 
     // Create OpenGL context
     val eglContext = createOpenGlObjects()
-    val videoFrameProcessorFactory = DefaultVideoFrameProcessor.Factory.Builder()
-        .setGlObjectsProvider(DefaultGlObjectsProvider(eglContext))
-        .build()
+    val videoFrameProcessorFactory =
+        DefaultVideoFrameProcessor.Factory
+            .Builder()
+            .setGlObjectsProvider(DefaultGlObjectsProvider(eglContext))
+            .build()
 
     // Initialize the Transformer
-    val transformer = Transformer.Builder(context)
-        .addListener(transformerListener)
-        .setVideoFrameProcessorFactory(videoFrameProcessorFactory)
-        .setAssetLoaderFactory(
-            RawAssetLoaderFactory(
-                audioFormat = audioFormat,
-                videoFormat = videoFormat,
-                onFrameProcessed = {
-                    awaitReadyForInput?.complete(Unit)
-                },
-                onRawAssetLoaderCreated = { rawAssetLoader ->
-                    assetLoaderDeferred.complete(rawAssetLoader)
-                },
-            ),
-        )
-        .build()
+    val transformer =
+        Transformer
+            .Builder(context)
+            .addListener(transformerListener)
+            .setVideoFrameProcessorFactory(videoFrameProcessorFactory)
+            .setAssetLoaderFactory(
+                RawAssetLoaderFactory(
+                    audioFormat = audioFormat,
+                    videoFormat = videoFormat,
+                    onFrameProcessed = {
+                        awaitReadyForInput?.complete(Unit)
+                    },
+                    onRawAssetLoaderCreated = { rawAssetLoader ->
+                        assetLoaderDeferred.complete(rawAssetLoader)
+                    },
+                ),
+            ).build()
 
     // Start the Transformer with the raw surface / audio composition
-    val editedMediaItem = EditedMediaItem.Builder(MediaItem.fromUri(Uri.EMPTY))
-        .setDurationUs(durationUs)
-        .setEffects(Effects(/* audioProcessors = */ listOf(), /* videoEffects = */ listOf(FlipEffect())))
-        .build()
+    val editedMediaItem =
+        EditedMediaItem
+            .Builder(MediaItem.fromUri(Uri.EMPTY))
+            .setDurationUs(durationUs)
+            .setEffects(Effects(/* audioProcessors = */ listOf(), /* videoEffects = */ listOf(FlipEffect())))
+            .build()
     transformer.start(editedMediaItem, outputFilePath)
 
     val rawAssetLoader = assetLoaderDeferred.await()
@@ -137,9 +154,10 @@ internal suspend fun recordLottieToVideo(
     launch {
         // Use an ImageReader to render bitmaps onto an input Surface
         val imageReader = ImageReader.newInstance(videoWidth, videoHeight, PixelFormat.RGBA_8888, 10)
-        val imageReaderListener = ImageReader.OnImageAvailableListener { imageReader ->
-            awaitForLastImage?.complete(imageReader.acquireLatestImage())
-        }
+        val imageReaderListener =
+            ImageReader.OnImageAvailableListener { imageReader ->
+                awaitForLastImage?.complete(imageReader.acquireLatestImage())
+            }
         imageReader.setOnImageAvailableListener(imageReaderListener, handler)
 
         repeat(lottieFrameFactory.totalFrames) { frameIndex ->
@@ -152,14 +170,15 @@ internal suspend fun recordLottieToVideo(
                 // Draw lottie on imageReader surface using hardware canvas
                 val hCanvas = imageReader.surface.lockHardwareCanvas()
                 try {
-                    hCanvas.drawRect(Rect(0,0, hCanvas.width, hCanvas.height), paint)
+                    hCanvas.drawRect(Rect(0, 0, hCanvas.width, hCanvas.height), paint)
                     // Fit lottie inside Canvas
-                    val bounds = calculateFitInsideBounds(
-                        contentWidth = lottieFrame.minimumWidth,
-                        contentHeight = lottieFrame.minimumHeight,
-                        canvasWidth = hCanvas.width,
-                        canvasHeight = hCanvas.height
-                    )
+                    val bounds =
+                        calculateFitInsideBounds(
+                            contentWidth = lottieFrame.minimumWidth,
+                            contentHeight = lottieFrame.minimumHeight,
+                            canvasWidth = hCanvas.width,
+                            canvasHeight = hCanvas.height,
+                        )
                     lottieFrame.bounds = bounds
                     lottieFrame.draw(hCanvas)
                 } finally {
@@ -182,28 +201,34 @@ internal suspend fun recordLottieToVideo(
     launch(Dispatchers.Default) {
         var lastPresentationTime: Long
         var endOfStream = false
-        val audioDecoder = AudioDecoder(
-            context = context,
-            audioInput = audioInput,
-            callback = object : AudioDecoder.AudioCallback {
-                override fun onAudioDecoded(buffer: ByteBuffer, size: Int, presentationTimeUs: Long) {
-                    awaitForAudioChunk?.complete(Pair(buffer, presentationTimeUs))
-                }
+        val audioDecoder =
+            AudioDecoder(
+                context = context,
+                audioInput = audioInput,
+                callback =
+                    object : AudioDecoder.AudioCallback {
+                        override fun onAudioDecoded(
+                            buffer: ByteBuffer,
+                            size: Int,
+                            presentationTimeUs: Long,
+                        ) {
+                            awaitForAudioChunk?.complete(Pair(buffer, presentationTimeUs))
+                        }
 
-                override fun onEndOfStream() {
-                    var result = false
-                    while (result.not()) {
-                        result = rawAssetLoader.queueAudioData(ByteBuffer.allocate(0), durationUs, true)
-                    }
-                    endOfStream = true
-                }
+                        override fun onEndOfStream() {
+                            var result = false
+                            while (result.not()) {
+                                result = rawAssetLoader.queueAudioData(ByteBuffer.allocate(0), durationUs, true)
+                            }
+                            endOfStream = true
+                        }
 
-                override fun onError(e: Exception) {
-                    endOfStream = true
-                    onError(e)
-                }
-            },
-        )
+                        override fun onError(e: Exception) {
+                            endOfStream = true
+                            onError(e)
+                        }
+                    },
+            )
         while (endOfStream.not()) {
             awaitForAudioChunk = CompletableDeferred()
             audioDecoder.decodeNextChunk()
@@ -226,29 +251,30 @@ private class RawAssetLoaderFactory(
     private val onFrameProcessed: () -> Unit,
     private val onRawAssetLoaderCreated: (RawAssetLoader) -> Unit,
 ) : AssetLoader.Factory {
-
     override fun createAssetLoader(
         editedMediaItem: EditedMediaItem,
         looper: Looper,
         listener: AssetLoader.Listener,
         compositionSettings: AssetLoader.CompositionSettings,
     ): RawAssetLoader {
-        val frameProcessedListener = OnInputFrameProcessedListener { texId, syncObject ->
-            try {
-                GlUtil.deleteTexture(texId)
-                GlUtil.deleteSyncObject(syncObject)
-                onFrameProcessed()
-            } catch (e: GlUtil.GlException) {
-                throw VideoFrameProcessingException(e)
+        val frameProcessedListener =
+            OnInputFrameProcessedListener { texId, syncObject ->
+                try {
+                    GlUtil.deleteTexture(texId)
+                    GlUtil.deleteSyncObject(syncObject)
+                    onFrameProcessed()
+                } catch (e: GlUtil.GlException) {
+                    throw VideoFrameProcessingException(e)
+                }
             }
-        }
-        val rawAssetLoader = RawAssetLoader(
-            editedMediaItem,
-            listener,
-            audioFormat,
-            videoFormat,
-            frameProcessedListener,
-        )
+        val rawAssetLoader =
+            RawAssetLoader(
+                editedMediaItem,
+                listener,
+                audioFormat,
+                videoFormat,
+                frameProcessedListener,
+            )
         onRawAssetLoaderCreated(rawAssetLoader)
         return rawAssetLoader
     }

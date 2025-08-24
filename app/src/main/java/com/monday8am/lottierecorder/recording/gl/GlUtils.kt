@@ -36,8 +36,15 @@ internal fun uploadImageToGLTexture(image: Image): Int {
 
     // Upload pixel data to OpenGL texture
     GLES20.glTexImage2D(
-        GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height,
-        0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer,
+        GLES20.GL_TEXTURE_2D,
+        0,
+        GLES20.GL_RGBA,
+        width,
+        height,
+        0,
+        GLES20.GL_RGBA,
+        GLES20.GL_UNSIGNED_BYTE,
+        buffer,
     )
 
     // Unbind texture
