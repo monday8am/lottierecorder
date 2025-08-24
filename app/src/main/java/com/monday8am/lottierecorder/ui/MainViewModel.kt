@@ -11,6 +11,7 @@ import com.monday8am.lottierecorder.lottie.LottieSceneImpl
 import com.monday8am.lottierecorder.recording.AudioInput
 import com.monday8am.lottierecorder.recording.RecordingResult
 import com.monday8am.lottierecorder.recording.RenderVideoUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,9 +20,12 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val videoPath = "${application.cacheDir}/output.mp4"
     private val renderVideoUseCase = RenderVideoUseCase(application.applicationContext)
     private val scenesFlow = MutableStateFlow(emptyList<LottieScene>())
 
@@ -30,13 +34,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<RecordingResult> = scenesFlow
         .filter { it.isNotEmpty() }
         .flatMapLatest { scenes ->
+            resetVideoFile()
             renderVideoUseCase.execute(
                 lottieScenes = scenes,
                 audioInput = AudioInput.RawResource(resourceId = R.raw.sample_15s),
-                outputPath = "${application.cacheDir}/output.mp4"
+                outputPath = videoPath
             )
         }
-        .stateIn(scope = viewModelScope, started = SharingStarted.Companion.WhileSubscribed(300L), initialValue = RecordingResult.Idle)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Companion.WhileSubscribed(300L),
+            initialValue = RecordingResult.Idle
+        )
 
     @androidx.annotation.OptIn(UnstableApi::class)
     fun recordLottie(lottieIds: List<LottieAnimationId>) {
@@ -44,5 +53,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             LottieSceneImpl(context = application.applicationContext, lottieResourceId = it.value)
         }
         scenesFlow.update { scenes }
+    }
+
+    private suspend fun resetVideoFile() {
+        withContext(Dispatchers.IO) {
+            with(application.applicationContext) {
+                if (fileList().contains(videoPath)) {
+                    deleteFile(videoPath)
+                }
+            }
+        }
     }
 }

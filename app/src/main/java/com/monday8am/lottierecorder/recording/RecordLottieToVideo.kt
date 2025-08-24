@@ -136,7 +136,7 @@ internal suspend fun recordLottieToVideo(
     // Launch coroutine to render lottie frames
     launch {
         // Use an ImageReader to render bitmaps onto an input Surface
-        val imageReader = ImageReader.newInstance(videoWidth, videoHeight, PixelFormat.RGBA_8888, 3)
+        val imageReader = ImageReader.newInstance(videoWidth, videoHeight, PixelFormat.RGBA_8888, 10)
         val imageReaderListener = ImageReader.OnImageAvailableListener { imageReader ->
             awaitForLastImage?.complete(imageReader.acquireLatestImage())
         }
@@ -152,9 +152,15 @@ internal suspend fun recordLottieToVideo(
                 // Draw lottie on imageReader surface using hardware canvas
                 val hCanvas = imageReader.surface.lockHardwareCanvas()
                 try {
-                    lottieFrame.renderMode
-                    lottieFrame.bounds = rectVideoSize
-                    hCanvas.drawRect(rectVideoSize, paint)
+                    hCanvas.drawRect(Rect(0,0, hCanvas.width, hCanvas.height), paint)
+                    // Fit lottie inside Canvas
+                    val bounds = calculateFitInsideBounds(
+                        contentWidth = lottieFrame.minimumWidth,
+                        contentHeight = lottieFrame.minimumHeight,
+                        canvasWidth = hCanvas.width,
+                        canvasHeight = hCanvas.height
+                    )
+                    lottieFrame.bounds = bounds
                     lottieFrame.draw(hCanvas)
                 } finally {
                     imageReader.surface.unlockCanvasAndPost(hCanvas)
