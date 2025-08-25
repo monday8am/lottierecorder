@@ -11,9 +11,6 @@ class LottieFrameFactory(
     val totalFrames: Int
         get() = lottieScenes.fold(0) { acc, e -> acc + e.totalFrames }
 
-    val totalDuration: Float
-        get() = lottieScenes.fold(0f) { acc, e -> acc + e.duration }
-
     val frameRate: Int
         get() = lottieScenes.first().frameRate
 
@@ -40,9 +37,6 @@ class LottieFrameFactory(
         currentSceneIndex = sceneIndex
         val scene = lottieScenes[sceneIndex]
         return scene.generateFrame(frameIndex - startEndFrames[sceneIndex].first)
-    }
-
-    fun release() {
     }
 
     @VisibleForTesting

@@ -56,7 +56,6 @@ internal suspend fun recordLottieToVideo(
     DebugTraceUtil.enableTracing = true
     val frameRate = lottieFrameFactory.frameRate
     val durationUs = (lottieFrameFactory.totalFrames.toFloat() / frameRate.toFloat() * 1000L * 1000L).toLong()
-    val rectVideoSize = Rect(0, 0, videoWidth, videoHeight)
     val paint =
         Paint().apply {
             isAntiAlias = true
