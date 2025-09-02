@@ -22,10 +22,15 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
+/**
+ * Displays the video at [uri] using Media3.
+ *
+ * @param onDispose Callback reporting playback progress when the player view is disposed.
+ */
 @Composable
 internal fun Media3Player(
     uri: String,
-    onDestroy: (Float) -> Unit,
+    onDispose: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var currentPosition by rememberSaveable { mutableLongStateOf(0L) }
@@ -35,7 +40,7 @@ internal fun Media3Player(
             currentPosition = position
 
             val progress = (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-            onDestroy(progress)
+            onDispose(progress)
         }
 
     Box(
