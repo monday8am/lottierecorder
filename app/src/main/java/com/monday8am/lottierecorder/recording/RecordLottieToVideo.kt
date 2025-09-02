@@ -9,6 +9,7 @@ import android.media.ImageReader
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -38,6 +39,8 @@ import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
+
+private const val TAG = "RecordLottieToVideo"
 
 @UnstableApi
 internal suspend fun recordLottieToVideo(
@@ -142,10 +145,22 @@ internal suspend fun recordLottieToVideo(
     val rawAssetLoader = assetLoaderDeferred.await()
 
     // Queues data to the asset loader, retrying until successful.
-    fun safeQueue(action: () -> Boolean) {
+    // Yield control to avoid busy-waiting and log after repeated failures.
+    fun safeQueue(action: () -> Boolean, maxRetries: Int = 100) {
         var result = false
-        while (!result) {
+        var attempts = 0
+        while (!result && attempts < maxRetries) {
             result = action()
+            if (!result) {
+                attempts++
+                if (attempts % 10 == 0) {
+                    Log.w(TAG, "Queue attempt $attempts failed")
+                }
+                Thread.yield()
+            }
+        }
+        if (!result) {
+            Log.e(TAG, "Failed to queue after $maxRetries attempts")
         }
     }
 
