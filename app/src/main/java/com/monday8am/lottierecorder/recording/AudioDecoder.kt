@@ -27,9 +27,10 @@ internal class AudioDecoder(
     context: Context,
     audioInput: AudioInput,
     private val callback: AudioCallback,
+    private val preloadSize: Int = DEFAULT_PRELOAD_SIZE,
 ) {
     companion object {
-        private const val PRELOAD_SIZE = 5 // Number of chunks to pre-decode
+        private const val DEFAULT_PRELOAD_SIZE = 5 // Number of chunks to pre-decode
     }
 
     interface AudioCallback {
@@ -95,15 +96,16 @@ internal class AudioDecoder(
      * Fetches a decoded chunk from the preloaded buffer queue.
      */
     internal fun decodeNextChunk() {
+        while (bufferQueue.isEmpty() && !isEOS) {
+            preloadChunks()
+        }
+
         if (bufferQueue.isNotEmpty()) {
             val chunk = bufferQueue.poll()
             chunk?.let {
                 callback.onAudioDecoded(it.buffer, it.size, it.presentationTimeUs)
             }
-        } else if (!isEOS) {
-            preloadChunks()
-            decodeNextChunk() // Try again after preloading
-        } else {
+        } else if (isEOS) {
             callback.onEndOfStream()
         }
     }
@@ -112,7 +114,7 @@ internal class AudioDecoder(
      * Decodes multiple chunks in advance and stores them in the buffer queue.
      */
     private fun preloadChunks() {
-        while (bufferQueue.size < PRELOAD_SIZE && !isEOS) {
+        while (bufferQueue.size < preloadSize && !isEOS) {
             val bufferInfo = MediaCodec.BufferInfo()
 
             val inputIndex = decoder.dequeueInputBuffer(10000)
