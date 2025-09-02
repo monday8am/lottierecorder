@@ -81,7 +81,7 @@ fun Content(
                 Text("Success: ${state.uri}")
                 Media3Player(
                     uri = state.uri,
-                    onDestroy = { },
+                    onDispose = { },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
